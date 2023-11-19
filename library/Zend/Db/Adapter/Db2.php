@@ -681,9 +681,10 @@ class Zend_Db_Adapter_Db2 extends Zend_Db_Adapter_Abstract
             throw new Zend_Db_Adapter_Db2_Exception("LIMIT argument offset=$offset is not valid");
         }
 
-        if ($offset === 0) {
-            return $sql . " FETCH FIRST $count ROWS ONLY";
-        }
+        //Modern versions already have `LIMIT,OFFSET` available.
+//        if ($offset === 0) {
+//            return $sql . " FETCH FIRST $count ROWS ONLY";
+//        }
 
         /**
          * DB2 does not implement the LIMIT clause as some RDBMS do.
@@ -691,14 +692,22 @@ class Zend_Db_Adapter_Db2 extends Zend_Db_Adapter_Abstract
          * Unfortunately because we use the column wildcard "*",
          * this puts an extra column into the query result set.
          */
-        return "SELECT z2.*
-            FROM (
-                SELECT ROW_NUMBER() OVER() AS \"ZEND_DB_ROWNUM\", z1.*
-                FROM (
-                    " . $sql . "
-                ) z1
-            ) z2
-            WHERE z2.zend_db_rownum BETWEEN " . ($offset+1) . " AND " . ($offset+$count);
+//        return "SELECT z2.*
+//            FROM (
+//                SELECT ROW_NUMBER() OVER() AS \"ZEND_DB_ROWNUM\", z1.*
+//                FROM (
+//                    " . $sql . "
+//                ) z1
+//            ) z2
+//            WHERE z2.zend_db_rownum BETWEEN " . ($offset+1) . " AND " . ($offset+$count);
+
+        $sql .= " LIMIT $count";
+        if ($offset > 0) {
+            $sql .= " OFFSET $offset";
+        }
+
+        return $sql;
+
     }
 
     /**
